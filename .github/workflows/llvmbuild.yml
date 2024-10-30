@@ -33,6 +33,7 @@ jobs:
         run: |
           build_llvm=`pwd`/build-llvm
           LLVM_DIR=`pwd`/llvm-project-18.1.8.src
+          installprefix=`pwd`/install
 
           patch1=$LLVM_DIR/llvm/lib/Transforms/Hello
           patch2=$LLVM_DIR/llvm/tools/bugpoint-passes
@@ -60,7 +61,7 @@ jobs:
                 -DCMAKE_TOOLCHAIN_FILE=$NDK_HOME/build/cmake/android.toolchain.cmake \
                 -DANDROID_ABI="arm64-v8a" \
                 -DANDROID_PLATFORM=android-30 \
-                -DCMAKE_INSTALL_PREFIX="install" \
+                -DCMAKE_INSTALL_PREFIX=$installprefix \
                 -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
                 -DLLVM_INCLUDE_TESTS=OFF \
                 -DLLVM_BUILD_TESTS=OFF \
@@ -81,7 +82,7 @@ jobs:
 
       - name: 执行strip优化
         run: |
-          find $build_llvm -type f \( -name "*.so" -o -name "*.a" \) -exec $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip {} \;
+          find ./build-llvm -type f \( -name "*.so" -o -name "*.a" \) -exec $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip {} \;
 
       - name: 安装LLVM工具链
         run: |
