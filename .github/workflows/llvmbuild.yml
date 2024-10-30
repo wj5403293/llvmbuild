@@ -28,6 +28,7 @@ jobs:
           tar -xJf llvm-project-18.1.8.src.tar.xz
           rm android-ndk-r27c-linux.zip
           rm llvm-project-18.1.8.src.tar.xz
+          ls
 
       - name: 开始编译LLVMProject
         run: |
@@ -89,6 +90,8 @@ jobs:
 
       - name: 压缩文件
         run: |
+          chmod +x ./strip.sh
+          ./strip.sh
           tar -cJf llvm-output.tar.xz install
 
       - name: 上传文件
