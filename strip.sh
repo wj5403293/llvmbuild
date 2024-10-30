@@ -9,7 +9,7 @@ for file in "$TARGET_DIR"/*.a; do
     if [ -f "$file" ]; then
         echo "正在处理文件: $file"
         # 对文件进行 strip 操作
-        $HOME/android-ndk-r27b/toolchains/llvm/prebuilt/linux-aarch64/bin/bin/llvm-strip "$file"
+        $HOME/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
         echo "已完成: $file"
     else
         echo "没有找到 .a 文件"
