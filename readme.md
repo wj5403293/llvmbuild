@@ -16,7 +16,7 @@ Hi wj5403293! You've successfully authenticated, but GitHub does not provide she
 git init
 
 提交本地仓库
-git add .    添加所有修改和新增的文件
+git add . 添加所有修改和新增的文件
 git add example.txt  添加指定文件
 
 上面命令是提交到暂缓区
@@ -25,5 +25,8 @@ git config --global --add safe.directory 路径
 
 关联远程仓库
 git remote add github 仓库ssh地址
+git remote -v  命令查看当前已设置的远程仓库及其别名，以及对应的推送和拉取地址
+git remote rename 别名 新别名
+git remote remove github  命令先把“github”这个别名对应的远程仓库设置给删除掉
 git push github main
 github名称可以随意 main是分支
