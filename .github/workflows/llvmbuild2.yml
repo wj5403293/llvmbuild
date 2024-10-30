@@ -93,5 +93,5 @@ jobs:
 
       - name: 创建GitHub发布版本
         run: | 
-          TAG=$(echo "$18.1.8_$(date +'%b-%d-%Y')-$(date -d "1970-01-01 UTC $(date +%T)" +%s)s")
+          TAG=$(echo "18.1.8_$(date +'%b-%d-%Y')-$(date -d "1970-01-01 UTC $(date +%T)" +%s)s")
           gh release create "${TAG}" linux-android-llvm-toolchain.tar.gz
