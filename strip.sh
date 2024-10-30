@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # 指定要处理的目录路径
-TARGET_DIR="./install/lib"
+TARGET_DIR="./install/lib" 测试
 
 # 遍历指定目录下所有 .a 和 .so 文件
 for file in "$TARGET_DIR"/*.{a,so}; do
