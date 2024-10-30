@@ -31,8 +31,6 @@ git remote remove github  命令先把“github”这个别名对应的远程�
 git push github main
 github名称可以随意 main是分支
 
-
-
 git restore . 还原所有在工作区有修改的文件到上一次提交时的状态：
 git restore example.txt  还原指定文件
 plaintext
