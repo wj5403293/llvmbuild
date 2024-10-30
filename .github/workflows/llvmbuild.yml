@@ -85,7 +85,7 @@ jobs:
                 -DLLVM_LINK_LLVM_DYLIB=ON \
                 -DCLANG_LINK_CLANG_DYLIB=ON \
                 -DCMAKE_BUILD_TYPE=Release
-                ninja -j`nproc` -C $build_llvm install
+                ninja -j8 -C $build_llvm install
 
       - name: 压缩文件
         run: |
