@@ -69,7 +69,6 @@ jobs:
                 -DLLVM_INCLUDE_DOCS=OFF \
                 -DCLANG_INCLUDE_DOCS=OFF \
                 -DCLANG_INCLUDE_TESTS=OFF \
-                -DCMAKE_INSTALL_DO_STRIP=1 \
                 -DCLANG_TOOL_C_INDEX_TEST_BUILD=OFF \
                 -DCLANG_TOOL_ARCMT_TEST_BUILD=OFF \
                 -DCLANG_TOOL_C_ARCMT_TEST_BUILD=OFF \
@@ -78,10 +77,9 @@ jobs:
                 -DLLVM_LINK_LLVM_DYLIB=ON \
                 -DCLANG_LINK_CLANG_DYLIB=ON \
                 -DCMAKE_BUILD_TYPE=Release
-                ls
                 ninja -j8 -C $build_llvm install
 
-      - name: 压缩文件
+      - name: 开始压缩工具链
         run: |
           chmod +x ./strip.sh
           ./strip.sh
