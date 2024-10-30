@@ -77,12 +77,18 @@ jobs:
                 -DLLVM_LINK_LLVM_DYLIB=ON \
                 -DCLANG_LINK_CLANG_DYLIB=ON \
                 -DCMAKE_BUILD_TYPE=Release
-                ninja -j8 -C $build_llvm install
+                ninja -j8 -C $build_llvm
+
+      - name: 执行strip优化
+        run: |
+          find $build_llvm -type f \( -name "*.so" -o -name "*.a" \) -exec $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip {} \;
+
+      - name: 安装LLVM工具链
+        run: |
+          ninja -j8 -C $build_llvm install
 
       - name: 开始压缩工具链
         run: |
-          chmod +x ./strip.sh
-          ./strip.sh
           tar -cJf llvm-output.tar.xz install
 
       - name: 上传文件
