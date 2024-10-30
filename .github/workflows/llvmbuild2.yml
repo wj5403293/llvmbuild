@@ -1,0 +1,91 @@
+name: 编译LLVM工具链
+
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装工具链
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential binutils wget unzip ninja-build
+
+      - name: 下载Android NDK
+        run: |
+          wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+          unzip android-ndk-r27c-linux.zip -d $HOME
+          echo "NDK_HOME=$HOME/android-ndk-r27c" >> $GITHUB_ENV
+
+      - name: 下载LLVMProject项目资源解压并删除
+        run: |
+          wget https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/llvm-project-18.1.8.src.tar.xz
+          tar -xJf llvm-project-18.1.8.src.tar.xz
+          rm android-ndk-r27c-linux.zip
+          rm llvm-project-18.1.8.src.tar.xz
+
+      - name: 开始编译LLVMProject
+        run: |
+          build_llvm=`pwd`/build-llvm
+          LLVM_DIR=`pwd`/llvm-project-18.1.8.src
+
+          patch1=$LLVM_DIR/llvm/lib/Transforms/Hello
+          patch2=$LLVM_DIR/llvm/tools/bugpoint-passes
+          patch3=$LLVM_DIR/llvm/examples/Bye
+          patch4=$LLVM_DIR/llvm/examples/IRTransforms
+
+          cd $patch1
+          sed -i "13i\if(NOT ANDROID)" CMakeLists.txt
+          sed -i "21a\endif()" CMakeLists.txt
+          cd $patch2
+          sed -i "17i\if(NOT ANDROID)" CMakeLists.txt
+          sed -i "24a\endif()" CMakeLists.txt
+          cd $patch3
+          sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' CMakeLists.txt
+          cd $patch4
+          sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' CMakeLists.txt
+          cd $HOME
+
+          cmake -G Ninja -S $LLVM_DIR/llvm -B $build_llvm \
+                -DLLVM_INSTALL_UTILS=ON \
+                -DLLD_VENDOR="星空 QQ:5403293" \
+                -DCLANG_VENDOR="星空 QQ:5403293" \
+                -DLLVM_ENABLE_PROJECTS="clang;lld" \
+                -DLLVM_TARGETS_TO_BUILD="ARM;AArch64;X86" \
+                -DCMAKE_TOOLCHAIN_FILE=$NDK_HOME/build/cmake/android.toolchain.cmake \
+                -DANDROID_ABI="arm64-v8a" \
+                -DANDROID_PLATFORM=android-30 \
+                -DCMAKE_INSTALL_PREFIX="install" \
+                -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
+                -DLLVM_INCLUDE_TESTS=OFF \
+                -DLLVM_BUILD_TESTS=OFF \
+                -DLLVM_INCLUDE_BENCHMARKS=OFF \
+                -DLLVM_INCLUDE_EXAMPLES=OFF \
+                -DLLVM_INCLUDE_DOCS=OFF \
+                -DCLANG_INCLUDE_DOCS=OFF \
+                -DCLANG_INCLUDE_TESTS=OFF \
+                -DCLANG_TOOL_C_INDEX_TEST_BUILD=OFF \
+                -DCLANG_TOOL_ARCMT_TEST_BUILD=OFF \
+                -DCLANG_TOOL_C_ARCMT_TEST_BUILD=OFF \
+                -DLLVM_USE_RELATIVE_PATHS_IN_FILES=ON \
+                -DLLVM_ENABLE_LIBXML2=OFF \
+                -DLLVM_LINK_LLVM_DYLIB=ON \
+                -DCLANG_LINK_CLANG_DYLIB=ON \
+                -DCMAKE_BUILD_TYPE=Release
+                ninja -j8 -C $build_llvm install
+
+      - name: 开始压缩工具链
+        run: |
+          chmod +x ./strip.sh
+          ./strip.sh
+          tar -czf linux-android-llvm-toolchain.tar.gz install
+
+      - name: 创建GitHub发布版本
+        run: | 
+          TAG=$(echo "$18.1.8_$(date +'%b-%d-%Y')-$(date -d "1970-01-01 UTC $(date +%T)" +%s)s")
+          gh release create "${TAG}" linux-android-llvm-toolchain.tar.gz
