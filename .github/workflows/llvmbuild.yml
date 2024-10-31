@@ -20,11 +20,11 @@ jobs:
         run: |
           wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
           unzip android-ndk-r27c-linux.zip
+          echo "NDK_HOME=android-ndk-r27c" >> $GITHUB_ENV
 
       - name: 为构建安装创建目录     
         run: |
           mkdir llvm-project-18.1.8.src android build-llvm
-          echo "NDK_HOME=android-ndk-r27c" >> $GITHUB_ENV
           echo "build_llvm=build-llvm" >> $GITHUB_ENV
           echo "LLVM_DIR=llvm-project-18.1.8.src" >> $GITHUB_ENV
           echo "installprefix=android" >> $GITHUB_ENV
