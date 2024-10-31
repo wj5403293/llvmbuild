@@ -22,7 +22,7 @@ jobs:
           unzip android-ndk-r27c-linux.zip -d $HOME
           echo "NDK_HOME=$HOME/android-ndk-r27c" >> $GITHUB_ENV
       - name: 为构建安装创建目录
-        run: mkdir llvm-project-18.1.8.src install build-llvm
+        run: mkdir llvm-project-18.1.8.src android build-llvm
 
       - name: 下载LLVMProject项目资源解压并删除
         run: |
@@ -33,9 +33,9 @@ jobs:
 
       - name: 开始编译LLVMProject
         run: |
-          export build_llvm=`pwd`/build-llvm
-          export LLVM_DIR=`pwd`/llvm-project-18.1.8.src
-          export installprefix=`pwd`/android
+          export build_llvm=build-llvm
+          export LLVM_DIR=llvm-project-18.1.8.src
+          export installprefix=android
           
           sed -i "13i\if(NOT ANDROID)" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
           sed -i "21a\endif()" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
@@ -77,7 +77,7 @@ jobs:
 
       - name: Strip .a文件
         run: |
-          for file in $build_llvm/lib*.a; do
+          for file in $build_llvm/lib/*.a; do
             if [ -f "$file" ]; then
               echo "正在处理文件: $file"
               $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
@@ -89,7 +89,7 @@ jobs:
 
       - name: Strip .so文件
         run: |
-          for file in $build_llvm/lib*.so; do
+          for file in $build_llvm/lib/*.so; do
             if [ -f "$file" ]; then
               echo "正在处理文件: $file"
               $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
