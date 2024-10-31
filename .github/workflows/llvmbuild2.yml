@@ -21,9 +21,8 @@ jobs:
           wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
           unzip android-ndk-r27c-linux.zip -d $HOME
           echo "NDK_HOME=$HOME/android-ndk-r27c" >> $GITHUB_ENV
-          
-     - name: 为构建安装创建目录
-        run: mkdir llvm-project-18.1.8.src install build-llvm     
+      - name: 为构建安装创建目录
+        run: mkdir llvm-project-18.1.8.src install build-llvm
 
       - name: 下载LLVMProject项目资源解压并删除
         run: |
@@ -53,6 +52,7 @@ jobs:
           cd $patch4
           sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' CMakeLists.txt
           cd $home
+          ls
 
           cmake -G Ninja -S $LLVM_DIR/llvm -B $build_llvm \
                 -DLLVM_INSTALL_UTILS=ON \
@@ -88,7 +88,6 @@ jobs:
 
       - name: 安装LLVM工具链
         run: |
-          ls
           ninja -j8 -C $build_llvm install              
 
       - name: 开始压缩工具链
