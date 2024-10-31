@@ -8,11 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.LLVM }}
-      run: echo "测试 secret: ${{ secrets.LLVM }}"
 
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        run: echo "Testing secret: ${{ secrets.MY_SECRET }}"
 
       - name: 安装工具链
         run: |
