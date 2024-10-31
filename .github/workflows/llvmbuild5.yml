@@ -58,7 +58,6 @@ jobs:
                 -DLLVM_ENABLE_PROJECTS="clang;lld" \
                 -DLLVM_TARGETS_TO_BUILD="ARM;AArch64;X86" \
                 -DCMAKE_TOOLCHAIN_FILE=$NDK_HOME/build/cmake/android-legacy.toolchain.cmake \
-                -DANDROID_USE_LEGACY_TOOLCHAIN_FILE=ON \
                 -DANDROID_ABI="arm64-v8a" \
                 -DANDROID_PLATFORM=android-30 \
                 -DCMAKE_INSTALL_PREFIX=$installprefix \
