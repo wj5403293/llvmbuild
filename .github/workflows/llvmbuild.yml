@@ -82,7 +82,7 @@ jobs:
           
       - name: Strip .a文件
         run: |
-          for file in $build_llvm/lib/*.a; do
+          for file in $installprefix/lib/*.a; do
             if [ -f "$file" ]; then
               echo "正在处理文件: $file"
               $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
@@ -94,7 +94,7 @@ jobs:
 
       - name: Strip .so文件
         run: |
-          for file in $build_llvm/lib/*.so; do
+          for file in $installprefix/lib/*.so; do
             if [ -f "$file" ]; then
               echo "正在处理文件: $file"
               $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
@@ -106,7 +106,7 @@ jobs:
 
       - name: 开始压缩工具链
         run: |
-          tar -cJf llvm-output.tar.xz $installprefix
+          tar -cJf llvm-output.tar.xz android
 
       - name: 上传文件
         uses: actions/upload-artifact@v4
