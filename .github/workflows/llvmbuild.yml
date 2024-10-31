@@ -20,10 +20,14 @@ jobs:
         run: |
           wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
           unzip android-ndk-r27c-linux.zip -d $HOME
-          echo "NDK_HOME=$HOME/android-ndk-r27c" >> $GITHUB_ENV
 
-      - name: 为构建安装创建目录
-        run: mkdir llvm-project-18.1.8.src android build-llvm
+      - name: 为构建安装创建目录     
+        run: |
+          mkdir llvm-project-18.1.8.src android build-llvm
+          echo "NDK_HOME=$HOME/android-ndk-r27c" >> $GITHUB_ENV
+          echo "build_llvm=$HOME/build-llvm" >> $GITHUB_ENV
+          echo "LLVM_DIR=$HOME/llvm-project-18.1.8.src" >> $GITHUB_ENV
+          echo "installprefix=$HOME/android" >> $GITHUB_ENV
         
       - name: 下载LLVMProject项目资源解压并删除
         run: |
@@ -33,11 +37,7 @@ jobs:
           rm llvm-project-18.1.8.src.tar.xz
 
       - name: 开始编译LLVMProject
-        run: |
-          echo "build_llvm=$(pwd)/build-llvm" >> $GITHUB_ENV
-          echo "LLVM_DIR=$(pwd)/llvm-project-18.1.8.src" >> $GITHUB_ENV
-          echo "installprefix=$(pwd)/android" >> $GITHUB_ENV
-          
+        run: |    
           # 修改CMakeLists.txt以支持Android构建
           sed -i "13i\if(NOT ANDROID)" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
           sed -i "21a\endif()" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
