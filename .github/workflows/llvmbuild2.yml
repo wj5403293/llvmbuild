@@ -33,26 +33,19 @@ jobs:
 
       - name: 开始编译LLVMProject
         run: |
-          home=`pwd`
-          build_llvm=`pwd`/build-llvm
-          LLVM_DIR=`pwd`/llvm-project-18.1.8.src
-          installprefix=`pwd`/install
-          patch1=$LLVM_DIR/llvm/lib/Transforms/Hello
-          patch2=$LLVM_DIR/llvm/tools/bugpoint-passes
-          patch3=$LLVM_DIR/llvm/examples/Bye
-          patch4=$LLVM_DIR/llvm/examples/IRTransforms
-          cd $patch1
-          sed -i "13i\if(NOT ANDROID)" CMakeLists.txt
-          sed -i "21a\endif()" CMakeLists.txt
-          cd $patch2
-          sed -i "17i\if(NOT ANDROID)" CMakeLists.txt
-          sed -i "24a\endif()" CMakeLists.txt
-          cd $patch3
-          sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' CMakeLists.txt
-          cd $patch4
-          sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' CMakeLists.txt
-          cd $home
-          ls
+          export build_llvm=`pwd`/build-llvm
+          export LLVM_DIR=`pwd`/llvm-project-18.1.8.src
+          export installprefix=`pwd`/install
+          
+          sed -i "13i\if(NOT ANDROID)" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
+          sed -i "21a\endif()" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
+          
+          sed -i "17i\if(NOT ANDROID)" $LLVM_DIR/llvm/tools/bugpoint-passes/CMakeLists.txt
+          sed -i "24a\endif()" $LLVM_DIR/llvm/tools/bugpoint-passes/CMakeLists.txt
+          
+          sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' $LLVM_DIR/llvm/examples/Bye/CMakeLists.txt
+
+          sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' $LLVM_DIR/llvm/examples/IRTransforms/CMakeLists.txt
 
           cmake -G Ninja -S $LLVM_DIR/llvm -B $build_llvm \
                 -DLLVM_INSTALL_UTILS=ON \
@@ -84,10 +77,12 @@ jobs:
 
       - name: 执行strip优化
         run: |
-          find ./build-llvm -type f \( -name "*.so" -o -name "*.a" \) -exec $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip {} \;
+          ls
+          find $build_llvm -type f \( -name "*.so" -o -name "*.a" \) -exec $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip {} \;
 
       - name: 安装LLVM工具链
         run: |
+          ls
           ninja -j8 -C $build_llvm install              
 
       - name: 开始压缩工具链
