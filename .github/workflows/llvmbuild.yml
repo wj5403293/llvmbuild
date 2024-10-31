@@ -26,7 +26,6 @@ jobs:
         run: |
           mkdir llvm-project-18.1.8.src android build-llvm
           echo "build_llvm=build-llvm" >> $GITHUB_ENV
-          echo "LLVM_DIR=llvm-project-18.1.8.src" >> $GITHUB_ENV
           echo "installprefix=android" >> $GITHUB_ENV
           ls
         
@@ -34,8 +33,10 @@ jobs:
         run: |
           wget https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/llvm-project-18.1.8.src.tar.xz
           tar -xJf llvm-project-18.1.8.src.tar.xz
+          echo "LLVM_DIR=llvm-project-18.1.8.src" >> $GITHUB_ENV
           rm android-ndk-r27c-linux.zip
           rm llvm-project-18.1.8.src.tar.xz
+          ls
 
       - name: 开始编译LLVMProject
         run: |    
