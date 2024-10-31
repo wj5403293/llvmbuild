@@ -28,6 +28,7 @@ jobs:
           echo "build_llvm=$HOME/build-llvm" >> $GITHUB_ENV
           echo "LLVM_DIR=$HOME/llvm-project-18.1.8.src" >> $GITHUB_ENV
           echo "installprefix=$HOME/android" >> $GITHUB_ENV
+          ls
         
       - name: 下载LLVMProject项目资源解压并删除
         run: |
