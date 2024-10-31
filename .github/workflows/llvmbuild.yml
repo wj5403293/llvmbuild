@@ -21,7 +21,9 @@ jobs:
           wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
           unzip android-ndk-r27c-linux.zip -d $HOME
           echo "NDK_HOME=$HOME/android-ndk-r27c" >> $GITHUB_ENV
-
+      - name: 为构建安装创建目录
+        run: mkdir llvm-project-18.1.8.src install build-llvm
+        
       - name: 下载LLVMProject项目资源解压并删除
         run: |
           wget https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/llvm-project-18.1.8.src.tar.xz
@@ -31,15 +33,14 @@ jobs:
 
       - name: 开始编译LLVMProject
         run: |
+          home=`pwd`
           build_llvm=`pwd`/build-llvm
           LLVM_DIR=`pwd`/llvm-project-18.1.8.src
           installprefix=`pwd`/install
-
           patch1=$LLVM_DIR/llvm/lib/Transforms/Hello
           patch2=$LLVM_DIR/llvm/tools/bugpoint-passes
           patch3=$LLVM_DIR/llvm/examples/Bye
           patch4=$LLVM_DIR/llvm/examples/IRTransforms
-
           cd $patch1
           sed -i "13i\if(NOT ANDROID)" CMakeLists.txt
           sed -i "21a\endif()" CMakeLists.txt
@@ -50,7 +51,8 @@ jobs:
           sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' CMakeLists.txt
           cd $patch4
           sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' CMakeLists.txt
-          cd $HOME
+          cd $home
+          ls
 
           cmake -G Ninja -S $LLVM_DIR/llvm -B $build_llvm \
                 -DLLVM_INSTALL_UTILS=ON \
