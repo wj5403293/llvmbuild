@@ -80,18 +80,6 @@ jobs:
           # 编译LLVM
           ninja -j8 -C $build_llvm install
           
-      - name: Strip 二进制文件
-        run: |
-          for file in $installprefix/bin/*; do
-            if [ -f "$file" ]; then
-              echo "正在处理文件: $file"
-              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
-              echo "已完成: $file"
-            else
-              echo "没有找到二进制文件"
-            fi
-          done
-
       - name: Strip .a文件
         run: |
           for file in $build_llvm/lib/*.a; do
