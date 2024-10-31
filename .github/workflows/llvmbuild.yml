@@ -1,4 +1,4 @@
-    name: 编译LLVM工具链1
+name: 编译LLVM工具链1
 
 on:
   workflow_dispatch
@@ -92,7 +92,7 @@ jobs:
 
       - name: Strip .a文件
         run: |
-          for file in $installprefix/lib/*.a; do
+          for file in $build_llvm/lib/*.a; do
             if [ -f "$file" ]; then
               echo "正在处理文件: $file"
               $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
@@ -104,7 +104,7 @@ jobs:
 
       - name: Strip .so文件
         run: |
-          for file in $installprefix/lib/*.so; do
+          for file in $build_llvm/lib/*.so; do
             if [ -f "$file" ]; then
               echo "正在处理文件: $file"
               $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
