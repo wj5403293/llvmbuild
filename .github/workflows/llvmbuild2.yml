@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ secrets.llvm }}
+      GH_TOKEN: ${{ secrets.LLVM }}
 
     steps:
       - name: 检出代码
