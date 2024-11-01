@@ -71,14 +71,28 @@ jobs:
                 -DCLANG_TOOL_ARCMT_TEST_BUILD=OFF \
                 -DCLANG_TOOL_C_ARCMT_TEST_BUILD=OFF \
                 -DLLVM_USE_RELATIVE_PATHS_IN_FILES=ON \
-                -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--gc-sections" \
-                -DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections" \
                 -DLLVM_ENABLE_LIBXML2=OFF \
                 -DLLVM_LINK_LLVM_DYLIB=ON \
                 -DCLANG_LINK_CLANG_DYLIB=ON \
                 -DCMAKE_BUILD_TYPE=Release
           # 编译LLVM
-          ninja -j8 -C $build_llvm install
+          ninja -j8 -C $build_llvm
+          
+      - name: Strip二进制文件
+        run: |
+          for file in $build_llvm/bin/*; do
+            if [ -f "$file" ]; then
+              echo "正在处理文件: $file"
+              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
+              echo "已完成: $file"
+            else
+              echo "没有找到二进制文件"
+            fi
+          done
+              
+      - name: 开始安装工具链
+        run: |
+          ninja -j8 -C $build_llvm install           
           
       - name: Strip .a文件
         run: |

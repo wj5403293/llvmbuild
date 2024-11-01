@@ -10,7 +10,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - name: 检出代码
+      - name: 检出仓库代码
         uses: actions/checkout@v4
 
       - name: 安装工具链
@@ -38,7 +38,6 @@ jobs:
           echo "LLVM_DIR=$(pwd)/llvm-project-18.1.8.src" >> $GITHUB_ENV
           rm android-ndk-r27c-linux.zip
           rm llvm-project-18.1.8.src.tar.xz
-          ls
 
       - name: 开始编译LLVMProject
         run: |         
@@ -59,8 +58,6 @@ jobs:
                 -DLLVM_TARGETS_TO_BUILD="ARM;AArch64;X86" \
                 -DCMAKE_TOOLCHAIN_FILE=$NDK_HOME/build/cmake/android.toolchain.cmake \
                 -DANDROID_ABI="arm64-v8a" \
-                -DCMAKE_CXX_FLAGS="-s -Wno-unused-command-line-argument" \
-                -DCMAKE_C_FLAGS="-s -Wno-unused-command-line-argument" \
                 -DANDROID_PLATFORM=android-30 \
                 -DCMAKE_INSTALL_PREFIX=$installprefix \
                 -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
@@ -80,7 +77,23 @@ jobs:
                 -DCLANG_LINK_CLANG_DYLIB=ON \
                 -DCMAKE_BUILD_TYPE=Release
           # 编译LLVM
-          ninja -j16 -C $build_llvm install
+          ninja -j8 -C $build_llvm
+          
+      - name: Strip二进制文件
+        run: |
+          for file in $build_llvm/bin/*; do
+            if [ -f "$file" ]; then
+              echo "正在处理文件: $file"
+              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
+              echo "已完成: $file"
+            else
+              echo "没有找到二进制文件"
+            fi
+          done
+              
+      - name: 开始安装工具链
+        run: |
+          ninja -j8 -C $build_llvm install           
         
       - name: Strip .a文件
         run: |

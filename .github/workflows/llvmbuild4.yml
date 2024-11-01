@@ -59,8 +59,6 @@ jobs:
                 -DLLVM_TARGETS_TO_BUILD="ARM;AArch64;X86" \
                 -DCMAKE_TOOLCHAIN_FILE=$NDK_HOME/build/cmake/android.toolchain.cmake \
                 -DANDROID_ABI="arm64-v8a" \
-                -DCMAKE_CXX_FLAGS="-Oz" \
-                -DCMAKE_C_FLAGS="-Oz" \
                 -DANDROID_PLATFORM=android-30 \
                 -DCMAKE_INSTALL_PREFIX=$installprefix \
                 -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
