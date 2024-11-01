@@ -86,6 +86,7 @@ jobs:
             if [ -f "$file" ]; then
               if [[ "$(basename "$file")" == "analyze-build" || 
                     "$(basename "$file")" == "scan-view" || 
+                    "$(basename "$file")" == "intercept-build || 
                     "$(basename "$file")" == "scan-build-py" || 
                     "$(basename "$file")" == "scan-build" ]]; then
                 echo "跳过文件: $file"
