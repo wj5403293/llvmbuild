@@ -1,4 +1,4 @@
-name: 编译LLVM工具链1
+name: 编译LLVM工具链3
 
 on:
   workflow_dispatch
@@ -6,6 +6,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: 检出代码
@@ -39,7 +41,7 @@ jobs:
           ls
 
       - name: 开始编译LLVMProject
-        run: |    
+        run: |         
           # 修改CMakeLists.txt以支持Android构建
           sed -i "13i\if(NOT ANDROID)" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
           sed -i "21a\endif()" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
@@ -53,7 +55,7 @@ jobs:
                 -DLLVM_INSTALL_UTILS=ON \
                 -DLLD_VENDOR="星空 QQ:5403293" \
                 -DCLANG_VENDOR="星空 QQ:5403293" \
-                -DLLVM_ENABLE_PROJECTS="clang;lld" \
+                -DLLVM_ENABLE_PROJECTS="clang" \
                 -DLLVM_TARGETS_TO_BUILD="ARM;AArch64;X86" \
                 -DCMAKE_TOOLCHAIN_FILE=$NDK_HOME/build/cmake/android.toolchain.cmake \
                 -DANDROID_ABI="arm64-v8a" \
@@ -66,6 +68,7 @@ jobs:
                 -DLLVM_INCLUDE_EXAMPLES=OFF \
                 -DLLVM_INCLUDE_DOCS=OFF \
                 -DCLANG_INCLUDE_DOCS=OFF \
+                -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
                 -DCLANG_INCLUDE_TESTS=OFF \
                 -DCLANG_TOOL_C_INDEX_TEST_BUILD=OFF \
                 -DCLANG_TOOL_ARCMT_TEST_BUILD=OFF \
@@ -76,45 +79,8 @@ jobs:
                 -DCLANG_LINK_CLANG_DYLIB=ON \
                 -DCMAKE_BUILD_TYPE=Release
           # 编译LLVM
-          ninja -j8 -C $build_llvm
+          ninja -j8 -C $build_llvm install
           
-      - name: Strip二进制文件
-        run: |
-          for file in $build_llvm/bin/*; do
-            if [ -f "$file" ]; then
-              if [[ "$(basename "$file")" == "analyze-build" || 
-                    "$(basename "$file")" == "scan-view" || 
-                    "$(basename "$file")" == "intercept-build" || 
-                    "$(basename "$file")" == "llvm-lit" || 
-                    "$(basename "$file")" == "scan-build-py" || 
-                    "$(basename "$file")" == "scan-build" ]]; then
-                echo "跳过文件: $file"
-                continue
-              fi
-              echo "正在处理文件: $file"
-              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
-              echo "已完成: $file"
-            else
-              echo "没有找到二进制文件"
-            fi
-          done
-              
-      - name: 开始安装工具链
-        run: |
-          ninja -j8 -C $build_llvm install           
-          
-      - name: Strip .a文件
-        run: |
-          for file in $installprefix/lib/*.a; do
-            if [ -f "$file" ]; then
-              echo "正在处理文件: $file"
-              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
-              echo "已完成: $file"
-            else
-              echo "没有找到 .a 文件"
-            fi
-          done
-
       - name: Strip .so文件
         run: |
           for file in $installprefix/lib/*.so; do
@@ -123,16 +89,15 @@ jobs:
               $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
               echo "已完成: $file"
             else
-              echo "没有找到 .so 文件"
+              echo "没有找到 .a 文件"
             fi
           done
-
+                           
       - name: 开始压缩工具链
         run: |
-          tar -cJf llvm-output.tar.xz android
+          tar -czf linux-android-llvm-toolchain.tar.gz $installprefix
 
-      - name: 上传文件
-        uses: actions/upload-artifact@v4
-        with:
-          name: llvm-output
-          path: llvm-output.tar.xz
+      - name: 创建GitHub发布版本
+        run: | 
+          TAG=$(echo "18.1.8_$(date +'%b-%d-%Y')-$(date -d "1970-01-01 UTC $(date +%T)" +%s)s")
+          gh release create "${TAG}" linux-android-llvm-toolchain.tar.gz
