@@ -6,6 +6,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      LD_LIBRARY_PATH: '$ORIGIN/../lib:$LD_LIBRARY_PATH'
 
     steps:
       - name: 检出代码
@@ -41,6 +44,7 @@ jobs:
       - name: 开始编译LLVMProject
         run: |    
           # 修改CMakeLists.txt以支持Android构建
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
           sed -i "13i\if(NOT ANDROID)" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
           sed -i "21a\endif()" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
           sed -i "17i\if(NOT ANDROID)" $LLVM_DIR/llvm/tools/bugpoint-passes/CMakeLists.txt
@@ -58,8 +62,10 @@ jobs:
                 -DCMAKE_TOOLCHAIN_FILE=$NDK_HOME/build/cmake/android.toolchain.cmake \
                 -DANDROID_ABI="arm64-v8a" \
                 -DANDROID_PLATFORM=android-30 \
-                -DCMAKE_INSTALL_PREFIX=$installprefix \
+                -DCMAKE_INSTALL_PREFIX=android \
                 -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
+                -DCMAKE_CXX_FLAGS="-s -Wno-unused-command-line-argument" \
+                -DCMAKE_C_FLAGS="-s -Wno-unused-command-line-argument" \
                 -DLLVM_INCLUDE_TESTS=OFF \
                 -DLLVM_BUILD_TESTS=OFF \
                 -DLLVM_INCLUDE_BENCHMARKS=OFF \
@@ -70,40 +76,13 @@ jobs:
                 -DCLANG_TOOL_C_INDEX_TEST_BUILD=OFF \
                 -DCLANG_TOOL_ARCMT_TEST_BUILD=OFF \
                 -DCLANG_TOOL_C_ARCMT_TEST_BUILD=OFF \
-                -DLLVM_USE_RELATIVE_PATHS_IN_FILES=ON \
                 -DLLVM_ENABLE_LIBXML2=OFF \
                 -DLLVM_LINK_LLVM_DYLIB=ON \
                 -DCLANG_LINK_CLANG_DYLIB=ON \
                 -DCMAKE_BUILD_TYPE=Release
           # 编译LLVM
-          ninja -j8 -C $build_llvm
-          
-      - name: Strip二进制文件
-        run: |
-          for file in $build_llvm/bin/*; do
-            if [ -f "$file" ]; then
-              if [[ "$(basename "$file")" == "analyze-build" || 
-                    "$(basename "$file")" == "scan-view" || 
-                    "$(basename "$file")" == "intercept-build" || 
-                    "$(basename "$file")" == "llvm-lit" || 
-                    "$(basename "$file")" == "llvm-locstats" || 
-                    "$(basename "$file")" == "scan-build-py" || 
-                    "$(basename "$file")" == "scan-build" ]]; then
-                echo "跳过文件: $file"
-                continue
-              fi
-              echo "正在处理文件: $file"
-              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
-              echo "已完成: $file"
-            else
-              echo "没有找到二进制文件"
-            fi
-          done
-              
-      - name: 开始安装工具链
-        run: |
-          ninja -j8 -C $build_llvm install           
-          
+          ninja -j8 -C $build_llvm install
+                 
       - name: Strip .a文件
         run: |
           for file in $installprefix/lib/*.a; do
@@ -118,7 +97,7 @@ jobs:
 
       - name: Strip .so文件
         run: |
-          for file in $installprefix/lib/*.so; do
+          for file in ./android/lib/*.so; do
             if [ -f "$file" ]; then
               echo "正在处理文件: $file"
               $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"

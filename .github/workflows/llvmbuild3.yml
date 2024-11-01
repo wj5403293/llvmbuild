@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      LD_LIBRARY_PATH: '$ORIGIN/../lib:$LD_LIBRARY_PATH'
 
     steps:
       - name: 检出代码
@@ -29,7 +30,6 @@ jobs:
           mkdir llvm-project-18.1.8.src android build-llvm
           echo "build_llvm=$(pwd)/build-llvm" >> $GITHUB_ENV
           echo "installprefix=$(pwd)/android" >> $GITHUB_ENV
-          ls
         
       - name: 下载LLVMProject项目资源解压并删除
         run: |
@@ -43,24 +43,25 @@ jobs:
       - name: 开始编译LLVMProject
         run: |         
           # 修改CMakeLists.txt以支持Android构建
-          sed -i "13i\if(NOT ANDROID)" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
-          sed -i "21a\endif()" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
-          sed -i "17i\if(NOT ANDROID)" $LLVM_DIR/llvm/tools/bugpoint-passes/CMakeLists.txt
-          sed -i "24a\endif()" $LLVM_DIR/llvm/tools/bugpoint-passes/CMakeLists.txt
-          sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' $LLVM_DIR/llvm/examples/Bye/CMakeLists.txt
-          sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' $LLVM_DIR/llvm/examples/IRTransforms/CMakeLists.txt
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+          sed -i "13i\if(NOT ANDROID)" ${LLVM_DIR}/llvm/lib/Transforms/Hello/CMakeLists.txt
+          sed -i "21a\endif()" ${LLVM_DIR}/llvm/lib/Transforms/Hello/CMakeLists.txt
+          sed -i "17i\if(NOT ANDROID)" ${LLVM_DIR}/llvm/tools/bugpoint-passes/CMakeLists.txt
+          sed -i "24a\endif()" ${LLVM_DIR}/llvm/tools/bugpoint-passes/CMakeLists.txt
+          sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' ${LLVM_DIR}/llvm/examples/Bye/CMakeLists.txt
+          sed -i 's/if (NOT WIN32 AND NOT CYGWIN)/if (NOT WIN32 AND NOT ANDROID)/g' ${LLVM_DIR}/llvm/examples/IRTransforms/CMakeLists.txt
 
           # 使用CMake配置构建
-          cmake -G Ninja -S $LLVM_DIR/llvm -B $build_llvm \
+          cmake -G Ninja -S ${LLVM_DIR}/llvm -B ${build_llvm} \
                 -DLLVM_INSTALL_UTILS=ON \
                 -DLLD_VENDOR="星空 QQ:5403293" \
                 -DCLANG_VENDOR="星空 QQ:5403293" \
-                -DLLVM_ENABLE_PROJECTS="clang" \
+                -DLLVM_ENABLE_PROJECTS="clang;lld" \
                 -DLLVM_TARGETS_TO_BUILD="ARM;AArch64;X86" \
-                -DCMAKE_TOOLCHAIN_FILE=$NDK_HOME/build/cmake/android.toolchain.cmake \
+                -DCMAKE_TOOLCHAIN_FILE=${NDK_HOME}/build/cmake/android.toolchain.cmake \
                 -DANDROID_ABI="arm64-v8a" \
                 -DANDROID_PLATFORM=android-30 \
-                -DCMAKE_INSTALL_PREFIX=$installprefix \
+                -DCMAKE_INSTALL_PREFIX=android \
                 -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
                 -DLLVM_INCLUDE_TESTS=OFF \
                 -DLLVM_BUILD_TESTS=OFF \
@@ -68,37 +69,55 @@ jobs:
                 -DLLVM_INCLUDE_EXAMPLES=OFF \
                 -DLLVM_INCLUDE_DOCS=OFF \
                 -DCLANG_INCLUDE_DOCS=OFF \
+                -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
                 -DCLANG_INCLUDE_TESTS=OFF \
                 -DCLANG_TOOL_C_INDEX_TEST_BUILD=OFF \
                 -DCLANG_TOOL_ARCMT_TEST_BUILD=OFF \
                 -DCLANG_TOOL_C_ARCMT_TEST_BUILD=OFF \
-                -DLLVM_USE_RELATIVE_PATHS_IN_FILES=ON \
                 -DLLVM_ENABLE_LIBXML2=OFF \
                 -DLLVM_LINK_LLVM_DYLIB=ON \
                 -DCLANG_LINK_CLANG_DYLIB=ON \
                 -DCMAKE_BUILD_TYPE=Release
           # 编译LLVM
-          ninja -j8 -C $build_llvm
+          ninja -j8 -C ${build_llvm} install
           
-      - name: Strip .so文件
+      - name: Strip二进制文件
         run: |
-          for file in $build_llvm/lib/*.so; do
+          for file in ./android/bin/*; do
             if [ -f "$file" ]; then
+              if [[ "$(basename "$file")" == "analyze-build" || 
+                    "$(basename "$file")" == "scan-view" || 
+                    "$(basename "$file")" == "intercept-build" || 
+                    "$(basename "$file")" == "llvm-lit" || 
+                    "$(basename "$file")" == "llvm-locstats" || 
+                    "$(basename "$file")" == "scan-build-py" || 
+                    "$(basename "$file")" == "scan-build" ]]; then
+                echo "跳过文件: $file"
+                continue
+              fi
               echo "正在处理文件: $file"
-              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
+              ${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
               echo "已完成: $file"
             else
-              echo "没有找到 .a 文件"
+              echo "没有找到二进制文件"
+            fi
+          done
+              
+      - name: Strip .so文件
+        run: |
+          for file in ./android/lib/*.so; do
+            if [ -f "$file" ]; then
+              echo "正在处理文件: $file"
+              ${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
+              echo "已完成: $file"
+            else
+              echo "没有找到 .so 文件"
             fi
           done
                            
-      - name: 开始安装工具链
-        run: |
-          ninja -j8 -C $build_llvm install           
-
       - name: 开始压缩工具链
         run: |
-          tar -czf linux-android-llvm-toolchain.tar.gz $installprefix
+          tar -czf linux-android-llvm-toolchain.tar.gz android
 
       - name: 创建GitHub发布版本
         run: | 

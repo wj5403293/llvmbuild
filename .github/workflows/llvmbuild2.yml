@@ -59,7 +59,7 @@ jobs:
                 -DCMAKE_TOOLCHAIN_FILE=$NDK_HOME/build/cmake/android.toolchain.cmake \
                 -DANDROID_ABI="arm64-v8a" \
                 -DANDROID_PLATFORM=android-30 \
-                -DCMAKE_INSTALL_PREFIX=$installprefix \
+                -DCMAKE_INSTALL_PREFIX=android \
                 -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
                 -DLLVM_INCLUDE_TESTS=OFF \
                 -DLLVM_BUILD_TESTS=OFF \
@@ -77,11 +77,11 @@ jobs:
                 -DCLANG_LINK_CLANG_DYLIB=ON \
                 -DCMAKE_BUILD_TYPE=Release
           # 编译LLVM
-          ninja -j8 -C $build_llvm
-          
-      - name: Strip .a文件
+      ninja -j8 -C $build_llvm
+      
+      - name: Strip .so文件
         run: |
-          for file in $build_llvm/lib/*.a; do
+          for file in $build_llvm/lib/*.so; do
             if [ -f "$file" ]; then
               echo "正在处理文件: $file"
               $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
@@ -90,26 +90,32 @@ jobs:
               echo "没有找到 .a 文件"
             fi
           done
+                    
+      - name: Strip二进制文件
+        run: |
+          for file in $build_llvm/bin/*.a; do
+            if [ -f "$file" ]; then
+              if [[ "$(basename "$file")" == "libLLVMDemangle.a" || 
+                    "$(basename "$file")" == "libLLVMSupport.a" || 
+                    "$(basename "$file")" == "libLLVMTableGen.a" ]]; then
+                echo "跳过文件: $file"
+                continue
+              fi
+              echo "正在处理文件: $file"
+              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
+              echo "已完成: $file"
+            else
+              echo "没有找到二进制文件"
+            fi
+          done
               
       - name: 开始安装工具链
         run: |
           ninja -j8 -C $build_llvm install           
         
-      - name: Strip .so文件
-        run: |
-          for file in $installprefix/lib/*.so; do
-            if [ -f "$file" ]; then
-              echo "正在处理文件: $file"
-              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
-              echo "已完成: $file"
-            else
-              echo "没有找到 .so 文件"
-            fi
-          done
-
       - name: 开始压缩工具链
         run: |
-          tar -czf linux-android-llvm-toolchain.tar.gz $installprefix
+          tar -czf linux-android-llvm-toolchain.tar.gz android
 
       - name: 创建GitHub发布版本
         run: | 
