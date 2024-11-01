@@ -78,11 +78,30 @@ jobs:
                 -DCLANG_LINK_CLANG_DYLIB=ON \
                 -DCMAKE_BUILD_TYPE=Release
           # 编译LLVM
-          ninja -j16 -C $build_llvm install
-        
+          ninja -j8 -C $build_llvm
+          
+      - name: Strip二进制文件
+        run: |
+          for file in $build_llvm/bin/*; do
+            if [ -f "$file" ]; then
+              if [[ "$(basename "$file")" == "analyze-build" || 
+                    "$(basename "$file")" == "scan-view" || 
+                    "$(basename "$file")" == "scan-build-py" || 
+                    "$(basename "$file")" == "scan-build" ]]; then
+                echo "跳过文件: $file"
+                continue
+              fi
+              echo "正在处理文件: $file"
+              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
+              echo "已完成: $file"
+            else
+              echo "没有找到二进制文件"
+            fi
+          done
+      
       - name: Strip .a文件
         run: |
-          for file in $installprefix/lib/*.a; do
+          for file in $build_llvm/lib/*.a; do
             if [ -f "$file" ]; then
               echo "正在处理文件: $file"
               $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
@@ -91,18 +110,10 @@ jobs:
               echo "没有找到 .a 文件"
             fi
           done
-
-      - name: Strip .so文件
+                           
+      - name: 开始安装工具链
         run: |
-          for file in $installprefix/lib/*.so; do
-            if [ -f "$file" ]; then
-              echo "正在处理文件: $file"
-              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
-              echo "已完成: $file"
-            else
-              echo "没有找到 .so 文件"
-            fi
-          done
+          ninja -j8 -C $build_llvm install           
 
       - name: 开始压缩工具链
         run: |
