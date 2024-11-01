@@ -1,4 +1,4 @@
-name: 编译LLVM工具链1
+name: 编译LLVM工具链4
 
 on:
   workflow_dispatch
@@ -8,7 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      LD_LIBRARY_PATH: '$ORIGIN/../lib:$LD_LIBRARY_PATH'
 
     steps:
       - name: 检出代码
@@ -44,7 +43,7 @@ jobs:
       - name: 开始编译LLVMProject
         run: |    
           # 修改CMakeLists.txt以支持Android构建
-          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+          export LD_LIBRARY_PATH="$(pwd)/android/lib"
           sed -i "13i\if(NOT ANDROID)" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
           sed -i "21a\endif()" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
           sed -i "17i\if(NOT ANDROID)" $LLVM_DIR/llvm/tools/bugpoint-passes/CMakeLists.txt
