@@ -43,7 +43,6 @@ jobs:
       - name: 开始编译LLVMProject
         run: |    
           # 修改CMakeLists.txt以支持Android构建
-          export LD_LIBRARY_PATH="$(pwd)/android/lib"
           sed -i "13i\if(NOT ANDROID)" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
           sed -i "21a\endif()" $LLVM_DIR/llvm/lib/Transforms/Hello/CMakeLists.txt
           sed -i "17i\if(NOT ANDROID)" $LLVM_DIR/llvm/tools/bugpoint-passes/CMakeLists.txt
@@ -73,6 +72,8 @@ jobs:
                 -DLLVM_INCLUDE_DOCS=OFF \
                 -DCLANG_INCLUDE_DOCS=OFF \
                 -DCLANG_INCLUDE_TESTS=OFF \
+                -DCMAKE_INSTALL_RPATH="android/../lib" \
+                -CMAKE_INSTALL_RPATH_USE_LINK_PATH=ON \
                 -DCLANG_TOOL_C_INDEX_TEST_BUILD=OFF \
                 -DCLANG_TOOL_ARCMT_TEST_BUILD=OFF \
                 -DCLANG_TOOL_C_ARCMT_TEST_BUILD=OFF \
@@ -81,6 +82,7 @@ jobs:
                 -DCLANG_LINK_CLANG_DYLIB=ON \
                 -DCMAKE_BUILD_TYPE=Release
           # 编译LLVM
+          export LD_LIBRARY_PATH="$(pwd)/android/"
           ninja -j8 -C $build_llvm install
                
       - name: 开始压缩工具链
