@@ -84,7 +84,31 @@ jobs:
           # 编译LLVM
           export LD_LIBRARY_PATH="$(pwd)/android/"
           ninja -j8 -C $build_llvm install
-               
+          
+      - name: Strip .so文件
+        run: |
+          for file in android/lib/*.so; do
+            if [ -f "$file" ]; then
+              echo "正在处理文件: $file"
+              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
+              echo "已完成: $file"
+            else
+              echo "没有找到 .so 文件"
+            fi
+          done
+                    
+      - name: Strip.a文件
+        run: |
+          for file in android/bin/*.a; do
+            if [ -f "$file" ]; then
+              echo "正在处理文件: $file"
+              $NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$file"
+              echo "已完成: $file"
+            else
+              echo "没有找到.a文件"
+            fi
+          done
+                  
       - name: 开始压缩工具链
         run: |
           tar -cJf llvm-output.tar.xz android
