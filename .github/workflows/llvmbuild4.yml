@@ -73,7 +73,6 @@ jobs:
                 -DCLANG_INCLUDE_DOCS=OFF \
                 -DCLANG_INCLUDE_TESTS=OFF \
                 -DCMAKE_INSTALL_RPATH="android/../lib" \
-                -CMAKE_INSTALL_RPATH_USE_LINK_PATH=ON \
                 -DCLANG_TOOL_C_INDEX_TEST_BUILD=OFF \
                 -DCLANG_TOOL_ARCMT_TEST_BUILD=OFF \
                 -DCLANG_TOOL_C_ARCMT_TEST_BUILD=OFF \
